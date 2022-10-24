@@ -1,7 +1,8 @@
-import React, { ChangeEvent,FormEvent,MouseEvent, useState } from "react"
-import Task from "./Task"
-import "../styles/todoApp.css"
 
+import React, { ChangeEvent,FormEvent, useState } from "react"
+import Task, { TaskModel } from "./Task"
+
+import styles from "./todoApp.module.css"
 interface TaskItem {
   id: string,
   title: string,
@@ -16,11 +17,7 @@ const TodoApp = () => {
   const [tasks, setTasks] = useState<TaskItem[]>([])
 
   const handleChange = (e:ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-
-      setTitle(value)
-
-    
+    setTitle(e.target.value)
   }
 
   const handleSubmit = (e:FormEvent<HTMLInputElement>) =>{
@@ -31,47 +28,38 @@ const TodoApp = () => {
       title:title, 
       completed:false
     }
+
     if(title != ""){
       setTasks([...tasks, newTask])
       setTitle("")
     }else{
       alert("ingrese tarea")
     }
-
   }
 
-  const handleUpdate = (id:string, value:string) =>{
-    const temp = [...tasks]
-    const item = temp.find(item => item.id == id)
-    if (item) {
-      item.title = value
-      setTasks(temp)
-    }
-    
+  const onTaskUpdate = (task: TaskModel) =>{
+    setTasks(prev => prev.map(item => item.id === task.id ? task : item))
   }
 
-  const handleDelete = (id:string) =>{
-    const temp = tasks.filter(item => item.id != id)
-    console.log(temp)
+  const onTaskDelete = (task: TaskModel) =>{
+    const temp = tasks.filter(item => item.id != task.id)
     setTasks(temp)
   }
  
   return (
-    <>
-      <div >
-        <form action="" >
-          <input type="text"  onChange={handleChange} value={title}/>
-          <input type="submit" value="Create"  onClick={handleSubmit}/>
+    <div className={styles.taskContainer}>
+      <div>
+        <form action="" className={styles.taskCreateForm}>
+          <input type="text" onChange={handleChange} value={title} className={styles.input}/>
+          <input type="submit" value="Create"  onClick={handleSubmit} className={styles.button}/>
         </form>
       </div>
-      <div className="listContainer">
-        {
-          tasks.map(({title,id,completed}) => (
-            <Task id= {id} title = {title} completed = {completed} onUpdate={handleUpdate} onDelete={handleDelete}/>
-          ))
-        }
+      <div className={styles.taskList}>
+        {tasks.map((task, key) => (
+          <Task key={key} task={task} onDelete={onTaskDelete} onUpdate={onTaskUpdate} />
+        ))}
       </div>
-    </>
+    </div>
   )
 }
 

@@ -1,52 +1,55 @@
-import { MouseEvent,ChangeEvent, FormEvent, useState } from "react"
+import { FormEvent, useState } from "react"
+import styles from "./task.module.css"
 
-interface Props  {
+export type TaskModel = {
   id: string,
   title: string,
   completed: boolean,
- 
-  onDelete:(id:string) => void
 }
 
-const Task = (props: Props)  => {
-  return (
-    <div className="task" >
-      {isEdit ? <FormEdit}/> : <TaskElement/> }
-    </div>
-  )
-}
-const TaskElement = (props:Props) =>{ 
-  return (
-    <div className="taskInfo" key={props.id}>
-      {props.id} - {props.title} <button onClick={() => setIsEdit(true)}>Edit</button>
-      <button onClick={() => props.onDelete(props.id)}>Delete</button>
-    </div>
-  )
+interface Props  {
+  task: TaskModel
+  onDelete: (task: TaskModel) => void
+  onUpdate: (task: TaskModel) => void
 }
 
-const FormEdit = (props: {title:string, id:string,  onUpdate:(id: string, value: string) => void, isEdit:boolean}) =>{
-    
-  const [update, setUpdate] = useState(props.title)
-    
-  const [isEdit, setIsEdit] = useState(false)
+const Task = ({ task, onDelete, onUpdate }:Props)  => {
+
+  const [isEditing, setIsEditing] = useState(false)
+
+  if (!isEditing) {
+    return (
+      <div className={styles.taskInfo}>
+        {task.title} <button onClick={() => setIsEditing(true)}>Edit</button>
+        <button onClick={() => onDelete(task)}>Delete</button>
+      </div>
+    )
+  }
   
-  const handleSubmit = (e:FormEvent<HTMLFormElement>) =>{
-    e.preventDefault()
+  const handleUpdate = (task: TaskModel) => {
+    onUpdate(task)
+    setIsEditing(false)
   }
 
-  const handleChange = (e:ChangeEvent<HTMLInputElement>) =>{
-    setUpdate(e.target.value)
-  }
+  return <FormEdit task={task} onUpdate={handleUpdate} />
+}
 
-  const handleClick = () =>{ 
-    props.onUpdate(props.id, update)
-    setIsEdit(false)
+type FormEditProps = Omit<Props, 'onDelete'> & {
+  onUpdate?: (task: Props['task']) => void
+}
+
+const FormEdit = ({ task, onUpdate }: FormEditProps) =>{
+  const [title, setTitle] = useState(task.title)
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) =>{
+    event.preventDefault()
+    onUpdate?.({ ...task, title })
   }
 
   return (
-    <form className="taskUpdateForm" onSubmit={handleSubmit}>
-      <input type="text" className="taskInput" onChange={handleChange} value={update}/>
-      <button  className="button" onClick={handleClick}>Update </button>
+    <form className={styles.taskUpdateForm} onSubmit={handleSubmit}>
+      <input type="text" className={styles.input} onChange={event => setTitle(event.target.value)} value={title}/>
+      <button  className={styles.button}>Update</button>
     </form>
   )
 }
